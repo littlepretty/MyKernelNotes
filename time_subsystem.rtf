@@ -1,0 +1,1133 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1344\cocoasubrtf720
+{\fonttbl\f0\fmodern\fcharset0 CourierNewPS-ItalicMT;\f1\fmodern\fcharset0 CourierNewPSMT;\f2\fmodern\fcharset0 CourierNewPS-BoldMT;
+}
+{\colortbl;\red255\green255\blue255;\red131\green129\blue131;\red0\green87\blue174;\red0\green130\blue0;
+\red129\green129\blue0;\red1\green1\blue129;\red191\green3\blue3;\red176\green126\blue0;\red255\green0\blue255;
+}
+\paperw11900\paperh16840\margl1134\margr1134\margb1134\margt1134\vieww37900\viewh18680\viewkind0
+\deftab720
+\pard\pardeftab720
+
+\f0\i\fs50 \cf2 // include/uapi/linux/time.h
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 struct\cf0  timeval \{\
+	__kernel_time_t		tv_sec;		
+\f0\i \cf2 /* seconds */
+\f1\i0 \cf0 \
+	__kernel_suseconds_t	tv_usec;	
+\f0\i \cf2 /* microseconds */
+\f1\i0 \cf0 \
+\};\
+\
+\cf3 struct\cf0  timespec \{\
+	__kernel_time_t	tv_sec;			
+\f0\i \cf2 /* seconds */
+\f1\i0 \cf0 \
+	\cf3 long\cf0 		tv_nsec;		
+\f0\i \cf2 /* nanoseconds */
+\f1\i0 \cf0 \
+\};\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // include/linux/jiffies.h
+\f1\i0 \cf0 \
+
+\f0\i \cf2 /* some arch's have a small-data section that can be accessed register-relative
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * but that can only take up to, say, 4-byte variables. jiffies being part of
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * an 8-byte variable may not be correctly accessed unless we force the issue
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf4 #define __jiffy_data  __attribute__((section(\cf5 ".data"\cf4 )))\cf0 \
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * The 64-bit value is not atomic - you MUST NOT read it
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * without sampling the sequence number in jiffies_lock.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * get_jiffies_64() will do this for you as appropriate.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f2\b \cf0 extern
+\f1\b0  u64 __jiffy_data jiffies_64;\
+
+\f2\b extern
+\f1\b0  \cf3 unsigned long\cf0  
+\f2\b volatile
+\f1\b0  __jiffy_data jiffies;\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // include/linux/ktime.h
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 union\cf0  ktime \{\
+	s64	tv64;\
+\pard\pardeftab720
+\cf4 #if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR)\cf0 \
+	\cf3 struct\cf0  \{\
+\cf4 # ifdef __BIG_ENDIAN\cf0 \
+	s32	sec, nsec;\
+\cf4 # else\cf0 \
+	s32	nsec, sec;\
+\cf4 # endif\cf0 \
+	\} tv;\
+\cf4 #endif\cf0 \
+\};\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // include/linux/clocksource.h
+\f1\i0 \cf0 \
+
+\f0\i \cf2 /**
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * struct clocksource - hardware abstraction for a free running counter
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *	Provides mostly state-free accessors to the underlying hardware.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *	This is the structure used for system time.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @name:		ptr to clocksource name
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @list:		list head for registration
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @rating:		rating value for selection (higher is better)
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			To avoid rating inflation the following
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			list should give you a guide as to how
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			to assign your clocksource a rating
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			1-99: Unfit for real use
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				Only available for bootup and testing purposes.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			100-199: Base level usability.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				Functional for real use, but not desired.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			200-299: Good.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				A correct and usable clocksource.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			300-399: Desired.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				A reasonably fast and accurate clocksource.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			400-499: Perfect
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				The ideal clocksource. A must-use where
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *				available.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @read:		returns a cycle value, passes clocksource as argument
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @enable:		optional function to enable the clocksource
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @disable:		optional function to disable the clocksource
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @mask:		bitmask for two's complement
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *			subtraction of non 64 bit counters
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @mult:		cycle to nanosecond multiplier
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @shift:		cycle to nanosecond divisor (power of two)
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @max_idle_ns:	max idle time permitted by the clocksource (nsecs)
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @maxadj:		maximum adjustment value to mult (~11%)
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @flags:		flags describing special properties
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @archdata:		arch-specific data
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @suspend:		suspend function for the clocksource, if necessary
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @resume:		resume function for the clocksource, if necessary
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @cycle_last:		most recent cycle counter value seen by ::read()
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @owner:		module reference, must be set by clocksource in modules
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 struct\cf0  clocksource \{\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 	 * Hotpath data, fits in a single cache line when the
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * clocksource itself is cacheline aligned.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf6 cycle_t\cf0  (*read)(\cf3 struct\cf0  clocksource *cs);\
+	cycle_t cycle_last;\
+	cycle_t mask;\
+	u32 mult;\
+	u32 shift;\
+	u64 max_idle_ns;\
+	u32 maxadj;\
+\pard\pardeftab720
+\cf4 #ifdef CONFIG_ARCH_CLOCKSOURCE_DATA\cf0 \
+	\cf3 struct\cf0  arch_clocksource_data archdata;\
+\cf4 #endif\cf0 \
+\
+	\cf3 const char\cf0  *name;\
+	\cf3 struct\cf0  list_head list;\
+	\cf3 int\cf0  rating;\
+	\cf3 int\cf0  (*enable)(\cf3 struct\cf0  clocksource *cs);\
+	\cf3 void\cf0  (*disable)(\cf3 struct\cf0  clocksource *cs);\
+	\cf3 unsigned long\cf0  flags;\
+	\cf3 void\cf0  (*suspend)(\cf3 struct\cf0  clocksource *cs);\
+	\cf3 void\cf0  (*resume)(\cf3 struct\cf0  clocksource *cs);\
+\
+	
+\f0\i \cf2 /* private: */
+\f1\i0 \cf0 \
+\cf4 #ifdef CONFIG_CLOCKSOURCE_WATCHDOG\cf0 \
+	
+\f0\i \cf2 /* Watchdog related data, used by the framework */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  list_head wd_list;\
+	cycle_t cs_last;\
+	cycle_t wd_last;\
+\cf4 #endif\cf0 \
+	\cf3 struct\cf0  module *owner;\
+\} ____cacheline_aligned;\
+\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /**
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * clocksource_cyc2ns - converts clocksource cycles to nanoseconds
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @cycles:	cycles
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @mult:	cycle to nanosecond multiplier
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @shift:	cycle to nanosecond divisor (power of two)
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Converts cycles to nanoseconds, using the given mult and shift.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * XXX - This could use some mult_lxl_ll() asm optimization
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static\cf0  
+\f2\b inline
+\f1\b0  s64 \cf6 clocksource_cyc2ns\cf0 (cycle_t cycles, u32 mult, u32 shift)\
+\{\
+	
+\f2\b return
+\f1\b0  ((u64) cycles * mult) >> shift;\
+\}\
+\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // kernel/time/clocksource.c
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static struct\cf0  clocksource *curr_clocksource;\
+\cf3 static\cf0  \cf6 LIST_HEAD\cf0 (clocksource_list);\
+\
+\cf3 static\cf0  \cf6 LIST_HEAD\cf0 (watchdog_list);\
+\cf3 static struct\cf0  clocksource *watchdog;\
+\cf3 static struct\cf0  timer_list watchdog_timer;\
+\cf3 static int\cf0  \cf6 clocksource_watchdog_kthread\cf0 (\cf3 void\cf0  *data);\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Interval: 0.5sec Threshold: 0.0625s
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf4 #define WATCHDOG_INTERVAL (HZ >> 1)\cf0 \
+\cf4 #define WATCHDOG_THRESHOLD (NSEC_PER_SEC >> 4)\cf0 \
+\
+\pard\pardeftab720
+\cf3 static void\cf0  \cf6 clocksource_watchdog_work\cf0 (\cf3 struct\cf0  work_struct *work)\
+\{\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 	 * If kthread_run fails the next watchdog scan over the
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * watchdog_list will find the unstable clock again.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf6 kthread_run\cf0 (clocksource_watchdog_kthread, NULL, \cf7 "kwatchdog"\cf0 );\
+\}\
+\
+
+\f0\i \cf2 // kernel/time/jiffies.c
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static struct\cf0  clocksource clocksource_jiffies = \{\
+	.name		= \cf7 "jiffies"\cf0 ,\
+	.rating		= \cf8 1\cf0 , 
+\f0\i \cf2 /* lowest valid rating*/
+\f1\i0 \cf0 \
+	.read		= jiffies_read,\
+	.mask		= \cf8 0xffffffff\cf0 , 
+\f0\i \cf2 /*32bits*/
+\f1\i0 \cf0 \
+	.mult		= NSEC_PER_JIFFY << JIFFIES_SHIFT, 
+\f0\i \cf2 /* details above */
+\f1\i0 \cf0 \
+	.shift		= JIFFIES_SHIFT,\
+\};\
+\
+\cf3 static int\cf0  __init \cf6 init_jiffies_clocksource\cf0 (\cf3 void\cf0 )\
+\{\
+	
+\f2\b return
+\f1\b0  \cf6 clocksource_register\cf0 (&clocksource_jiffies);\
+\}\
+\
+\pard\pardeftab720
+\cf6 core_initcall\cf0 (init_jiffies_clocksource);\
+\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // include/linux/timekeeper_internal.h
+\f1\i0 \cf0 \
+
+\f0\i \cf2 /* Structure holding internal timekeeping values. */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 struct\cf0  timekeeper \{\
+	
+\f0\i \cf2 /* Current clocksource used for timekeeping. */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  clocksource	*clock;\
+	
+\f0\i \cf2 /* NTP adjusted clock multiplier */
+\f1\i0 \cf0 \
+	u32			mult;\
+	
+\f0\i \cf2 /* The shift value of the current clocksource. */
+\f1\i0 \cf0 \
+	u32			shift;\
+	
+\f0\i \cf2 /* Number of clock cycles in one NTP interval. */
+\f1\i0 \cf0 \
+	cycle_t			cycle_interval;\
+	
+\f0\i \cf2 /* Last cycle value (also stored in clock->cycle_last) */
+\f1\i0 \cf0 \
+	cycle_t			cycle_last;\
+	
+\f0\i \cf2 /* Number of clock shifted nano seconds in one NTP interval. */
+\f1\i0 \cf0 \
+	u64			xtime_interval;\
+	
+\f0\i \cf2 /* shifted nano seconds left over when rounding cycle_interval */
+\f1\i0 \cf0 \
+	s64			xtime_remainder;\
+	
+\f0\i \cf2 /* Raw nano seconds accumulated per NTP interval. */
+\f1\i0 \cf0 \
+	u32			raw_interval;\
+\
+	
+\f0\i \cf2 /* Current CLOCK_REALTIME time in seconds */
+\f1\i0 \cf0 \
+	u64			xtime_sec;\
+	
+\f0\i \cf2 /* Clock shifted nano seconds */
+\f1\i0 \cf0 \
+	u64			xtime_nsec;\
+\
+	
+\f0\i \cf2 /* Difference between accumulated time and NTP time in ntp
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 	 * shifted nano seconds. */
+\f1\i0 \cf0 \
+	s64			ntp_error;\
+	
+\f0\i \cf2 /* Shift conversion between clock shifted nano seconds and
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * ntp shifted nano seconds. */
+\f1\i0 \cf0 \
+	u32			ntp_error_shift;\
+\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * wall_to_monotonic is what we need to add to xtime (or xtime corrected
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * for sub jiffie times) to get to monotonic time.  Monotonic is pegged
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * at zero at system boot time, so wall_to_monotonic will be negative,
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * however, we will ALWAYS keep the tv_nsec part positive so we can use
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * the usual normalization.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 *
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * wall_to_monotonic is moved after resume from suspend for the
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * monotonic time not to jump. We need to add total_sleep_time to
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * wall_to_monotonic to get the real boot based time offset.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 *
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * - wall_to_monotonic is no longer the boot time, getboottime must be
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * used instead.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  timespec		wall_to_monotonic;\
+	
+\f0\i \cf2 /* Offset clock monotonic -> clock realtime */
+\f1\i0 \cf0 \
+	ktime_t			offs_real;\
+	
+\f0\i \cf2 /* time spent in suspend */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  timespec		total_sleep_time;\
+	
+\f0\i \cf2 /* Offset clock monotonic -> clock boottime */
+\f1\i0 \cf0 \
+	ktime_t			offs_boot;\
+	
+\f0\i \cf2 /* The raw monotonic time for the CLOCK_MONOTONIC_RAW posix clock. */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  timespec		raw_time;\
+	
+\f0\i \cf2 /* The current UTC to TAI offset in seconds */
+\f1\i0 \cf0 \
+	s32			tai_offset;\
+	
+\f0\i \cf2 /* Offset clock monotonic -> clock tai */
+\f1\i0 \cf0 \
+	ktime_t			offs_tai;\
+\
+\};\
+\
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *	timespec variable xtime is replaced by this function
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static\cf0  
+\f2\b inline
+\f1\b0  \cf3 struct\cf0  timespec \cf6 tk_xtime\cf0 (\cf3 struct\cf0  timekeeper *tk)\
+\{\
+	\cf3 struct\cf0  timespec ts;\
+\
+	ts.tv_sec = tk->xtime_sec;\
+	ts.tv_nsec = (\cf3 long\cf0 )(tk->xtime_nsec >> tk->shift);\
+	
+\f2\b return
+\f1\b0  ts;\
+\}\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // kernel/time/timekeeping.c
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static struct\cf0  timekeeper timekeeper;\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /**
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * get_monotonic_boottime - Returns monotonic time since boot
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @ts:		pointer to the timespec to be set
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Returns the monotonic time since boot in a timespec.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * This is similar to CLOCK_MONTONIC/ktime_get_ts, but also
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * includes the time spent in suspend.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 void\cf0  \cf6 get_monotonic_boottime\cf0 (\cf3 struct\cf0  timespec *ts)\
+\{\
+	\cf3 struct\cf0  timekeeper *tk = &timekeeper;\
+	\cf3 struct\cf0  timespec tomono, sleep;\
+	s64 nsec;\
+	\cf3 unsigned int\cf0  seq;\
+\
+	\cf6 WARN_ON\cf0 (timekeeping_suspended);\
+\
+	
+\f2\b do
+\f1\b0  \{\
+		seq = \cf6 read_seqcount_begin\cf0 (&timekeeper_seq);\
+		ts->tv_sec = tk->xtime_sec;\
+		nsec = \cf6 timekeeping_get_ns\cf0 (tk);\
+		tomono = tk->wall_to_monotonic;\
+		sleep = tk->total_sleep_time;\
+\
+	\} 
+\f2\b while
+\f1\b0  (\cf6 read_seqcount_retry\cf0 (&timekeeper_seq, seq));\
+\
+	ts->tv_sec += tomono.tv_sec + sleep.tv_sec;\
+	ts->tv_nsec = \cf8 0\cf0 ;\
+	\cf6 timespec_add_ns\cf0 (ts, nsec + tomono.tv_nsec + sleep.tv_nsec);\
+\}\
+\pard\pardeftab720
+\cf6 EXPORT_SYMBOL_GPL\cf0 (get_monotonic_boottime);\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * timekeeping_init - Initializes the clocksource and common timekeeping values
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 void\cf0  __init \cf6 timekeeping_init\cf0 (\cf3 void\cf0 )\
+\{\
+	\cf3 struct\cf0  timekeeper *tk = &timekeeper;\
+	\cf3 struct\cf0  clocksource *clock;\
+	\cf3 unsigned long\cf0  flags;\
+	\cf3 struct\cf0  timespec now, boot, tmp;\
+\
+	\cf6 read_persistent_clock\cf0 (&now);\
+\
+	
+\f2\b if
+\f1\b0  (!\cf6 timespec_valid_strict\cf0 (&now)) \{\
+		\cf6 pr_warn\cf0 (\cf7 "WARNING: Persistent clock returned invalid value!\cf9 \\n\cf7 "\cf0 \
+			\cf7 "         Check your CMOS/BIOS settings.\cf9 \\n\cf7 "\cf0 );\
+		now.tv_sec = \cf8 0\cf0 ;\
+		now.tv_nsec = \cf8 0\cf0 ;\
+	\} 
+\f2\b else if
+\f1\b0  (now.tv_sec || now.tv_nsec)\
+		persistent_clock_exist = 
+\f2\b true
+\f1\b0 ;\
+\
+	\cf6 read_boot_clock\cf0 (&boot);\
+	
+\f2\b if
+\f1\b0  (!\cf6 timespec_valid_strict\cf0 (&boot)) \{\
+		\cf6 pr_warn\cf0 (\cf7 "WARNING: Boot clock returned invalid value!\cf9 \\n\cf7 "\cf0 \
+			\cf7 "         Check your CMOS/BIOS settings.\cf9 \\n\cf7 "\cf0 );\
+		boot.tv_sec = \cf8 0\cf0 ;\
+		boot.tv_nsec = \cf8 0\cf0 ;\
+	\}\
+\
+	\cf6 raw_spin_lock_irqsave\cf0 (&timekeeper_lock, flags);\
+	\cf6 write_seqcount_begin\cf0 (&timekeeper_seq);\
+	\cf6 ntp_init\cf0 ();\
+\
+	clock = \cf6 clocksource_default_clock\cf0 ();\
+	
+\f2\b if
+\f1\b0  (clock->enable)\
+		clock->\cf6 enable\cf0 (clock);\
+	\cf6 tk_setup_internals\cf0 (tk, clock);\
+\
+	\cf6 tk_set_xtime\cf0 (tk, &now);\
+	tk->raw_time.tv_sec = \cf8 0\cf0 ;\
+	tk->raw_time.tv_nsec = \cf8 0\cf0 ;\
+	
+\f2\b if
+\f1\b0  (boot.tv_sec == \cf8 0\cf0  && boot.tv_nsec == \cf8 0\cf0 )\
+		boot = \cf6 tk_xtime\cf0 (tk);\
+\
+	\cf6 set_normalized_timespec\cf0 (&tmp, -boot.tv_sec, -boot.tv_nsec);\
+	\cf6 tk_set_wall_to_mono\cf0 (tk, tmp);\
+\
+	tmp.tv_sec = \cf8 0\cf0 ;\
+	tmp.tv_nsec = \cf8 0\cf0 ;\
+	\cf6 tk_set_sleep_time\cf0 (tk, tmp);\
+\
+	\cf6 memcpy\cf0 (&shadow_timekeeper, &timekeeper, 
+\f2\b sizeof
+\f1\b0 (timekeeper));\
+\
+	\cf6 write_seqcount_end\cf0 (&timekeeper_seq);\
+	\cf6 raw_spin_unlock_irqrestore\cf0 (&timekeeper_lock, flags);\
+\}\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /**
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * xtime_update() - advances the timekeeping infrastructure
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @ticks:	number of ticks, that have elapsed since the last call.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Must be called with interrupts disabled.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 void\cf0  \cf6 xtime_update\cf0 (\cf3 unsigned long\cf0  ticks)\
+\{\
+	\cf6 write_seqlock\cf0 (&jiffies_lock);\
+	\cf6 do_timer\cf0 (ticks);\
+	\cf6 write_sequnlock\cf0 (&jiffies_lock);\
+	\cf6 update_wall_time\cf0 ();\
+\}\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Must hold jiffies_lock
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 void\cf0  \cf6 do_timer\cf0 (\cf3 unsigned long\cf0  ticks)\
+\{\
+	jiffies_64 += ticks;\
+	\cf6 calc_global_load\cf0 (ticks);\
+\}\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 // include/linux/timer.h
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 struct\cf0  timer_list \{\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 	 * All fields that change during normal runtime grouped to the
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * same cacheline
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  list_head entry;\
+	\cf3 unsigned long\cf0  expires;\
+	\cf3 struct\cf0  tvec_base *base;\
+\
+	\cf3 void\cf0  (*function)(\cf3 unsigned long\cf0 );\
+	\cf3 unsigned long\cf0  data;\
+\
+	\cf3 int\cf0  slack;\
+\
+\pard\pardeftab720
+\cf4 #ifdef CONFIG_TIMER_STATS\cf0 \
+	\cf3 int\cf0  start_pid;\
+	\cf3 void\cf0  *start_site;\
+	\cf3 char\cf0  start_comm[\cf8 16\cf0 ];\
+\cf4 #endif\cf0 \
+\cf4 #ifdef CONFIG_LOCKDEP\cf0 \
+	\cf3 struct\cf0  lockdep_map lockdep_map;\
+\cf4 #endif\cf0 \
+\};\
+\
+\pard\pardeftab720
+\cf3 struct\cf0  timer_list timer;\
+\pard\pardeftab720
+\cf6 init_timer\cf0 (&timer);\
+timer.function = my_foo_function;\
+timer.data = my_foo_data;\
+timer.expires = jiffies + HZ * \cf8 5\cf0  
+\f0\i \cf2 // expires after 5 seconds
+\f1\i0 \cf0 \
+\cf6 add_timer\cf0 (&timer);\
+...\
+\cf6 mod_timer\cf0 (&timer, jiffies + \cf8 50\cf0 );\
+\cf6 del_timer\cf0 (&timer);\
+\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * per-CPU timer vector definitions:
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf4 #define TVN_BITS (CONFIG_BASE_SMALL ? 4 : 6)\cf0 \
+\cf4 #define TVR_BITS (CONFIG_BASE_SMALL ? 6 : 8)\cf0 \
+\cf4 #define TVN_SIZE (1 << TVN_BITS)\cf0 \
+\cf4 #define TVR_SIZE (1 << TVR_BITS)\cf0 \
+\cf4 #define TVN_MASK (TVN_SIZE - 1)\cf0 \
+\cf4 #define TVR_MASK (TVR_SIZE - 1)\cf0 \
+\cf4 #define MAX_TVAL ((unsigned long)((1ULL << (TVR_BITS + 4*TVN_BITS)) - 1))\cf0 \
+\
+\pard\pardeftab720
+\cf3 struct\cf0  tvec \{\
+	\cf3 struct\cf0  list_head vec[TVN_SIZE];\
+\};\
+\
+\cf3 struct\cf0  tvec_root \{\
+	\cf3 struct\cf0  list_head vec[TVR_SIZE];\
+\};\
+\
+\cf3 struct\cf0  tvec_base \{\
+	spinlock_t lock;\
+	\cf3 struct\cf0  timer_list *running_timer;\
+	\cf3 unsigned long\cf0  timer_jiffies;\
+	\cf3 unsigned long\cf0  next_timer;\
+	\cf3 unsigned long\cf0  active_timers;\
+	\cf3 unsigned long\cf0  all_timers;\
+	\cf3 struct\cf0  tvec_root tv1;\
+	\cf3 struct\cf0  tvec tv2;\
+	\cf3 struct\cf0  tvec tv3;\
+	\cf3 struct\cf0  tvec tv4;\
+	\cf3 struct\cf0  tvec tv5;\
+\} ____cacheline_aligned;\
+\
+\cf3 struct\cf0  tvec_base boot_tvec_bases;\
+\pard\pardeftab720
+\cf6 EXPORT_SYMBOL\cf0 (boot_tvec_bases);\
+\pard\pardeftab720
+\cf3 static\cf0  \cf6 DEFINE_PER_CPU\cf0 (\cf3 struct\cf0  tvec_base *, tvec_bases) = &boot_tvec_bases;\
+\
+\cf3 static void\cf0  \cf6 __internal_add_timer\cf0 (\cf3 struct\cf0  tvec_base *base, \cf3 struct\cf0  timer_list *timer)\
+\{\
+	\cf3 unsigned long\cf0  expires = timer->expires;\
+	\cf3 unsigned long\cf0  idx = expires - base->timer_jiffies;\
+	\cf3 struct\cf0  list_head *vec;\
+\
+	
+\f2\b if
+\f1\b0  (idx < TVR_SIZE) \{\
+		\cf3 int\cf0  i = expires & TVR_MASK;\
+		vec = base->tv1.vec + i;\
+	\} 
+\f2\b else if
+\f1\b0  (idx < \cf8 1\cf0  << (TVR_BITS + TVN_BITS)) \{\
+		\cf3 int\cf0  i = (expires >> TVR_BITS) & TVN_MASK;\
+		vec = base->tv2.vec + i;\
+	\} 
+\f2\b else if
+\f1\b0  (idx < \cf8 1\cf0  << (TVR_BITS + \cf8 2\cf0  * TVN_BITS)) \{\
+		\cf3 int\cf0  i = (expires >> (TVR_BITS + TVN_BITS)) & TVN_MASK;\
+		vec = base->tv3.vec + i;\
+	\} 
+\f2\b else if
+\f1\b0  (idx < \cf8 1\cf0  << (TVR_BITS + \cf8 3\cf0  * TVN_BITS)) \{\
+		\cf3 int\cf0  i = (expires >> (TVR_BITS + \cf8 2\cf0  * TVN_BITS)) & TVN_MASK;\
+		vec = base->tv4.vec + i;\
+	\} 
+\f2\b else if
+\f1\b0  ((\cf3 signed long\cf0 ) idx < \cf8 0\cf0 ) \{\
+		
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 		 * Can happen if you add a timer with expires == jiffies,
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 * or you set a timer to go off in the past
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 */
+\f1\i0 \cf0 \
+		vec = base->tv1.vec + (base->timer_jiffies & TVR_MASK);\
+	\} 
+\f2\b else
+\f1\b0  \{\
+		\cf3 int\cf0  i;\
+		
+\f0\i \cf2 /* If the timeout is larger than MAX_TVAL (on 64-bit
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 * architectures or with CONFIG_BASE_SMALL=1) then we
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 * use the maximum timeout.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 */
+\f1\i0 \cf0 \
+		
+\f2\b if
+\f1\b0  (idx > MAX_TVAL) \{\
+			idx = MAX_TVAL;\
+			expires = idx + base->timer_jiffies;\
+		\}\
+		i = (expires >> (TVR_BITS + \cf8 3\cf0  * TVN_BITS)) & TVN_MASK;\
+		vec = base->tv5.vec + i;\
+	\}\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * Timers are FIFO:
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf6 list_add_tail\cf0 (&timer->entry, vec);\
+\}\
+\
+\pard\pardeftab720
+\cf3 static int\cf0  \cf6 cascade\cf0 (\cf3 struct\cf0  tvec_base *base, \cf3 struct\cf0  tvec *tv, \cf3 int\cf0  index)\
+\{\
+	
+\f0\i \cf2 /* cascade all the timers from tv up one level */
+\f1\i0 \cf0 \
+	\cf3 struct\cf0  timer_list *timer, *tmp;\
+	\cf3 struct\cf0  list_head tv_list;\
+\
+	\cf6 list_replace_init\cf0 (tv->vec + index, &tv_list);\
+\
+	
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 	 * We are removing _all_ timers from the list, so we
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 * don't have to detach them individually.
+\f1\i0 \cf0 \
+
+\f0\i \cf2 	 */
+\f1\i0 \cf0 \
+	\cf6 list_for_each_entry_safe\cf0 (timer, tmp, &tv_list, entry) \{\
+		\cf6 BUG_ON\cf0 (\cf6 tbase_get_base\cf0 (timer->base) != base);\
+		
+\f0\i \cf2 /* No accounting, while moving them */
+\f1\i0 \cf0 \
+		\cf6 __internal_add_timer\cf0 (base, timer);\
+	\}\
+\
+	
+\f2\b return
+\f1\b0  index;\
+\}\
+\
+\pard\pardeftab720
+\cf4 #define INDEX(N) ((base->timer_jiffies >> (TVR_BITS + (N) * TVN_BITS)) & TVN_MASK)\cf0 \
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /**
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * __run_timers - run all expired timers (if any) on this CPU.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * @base: the timer vector to be processed.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  *
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * This function cascades all vectors and executes all expired timer
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * vectors.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static\cf0  
+\f2\b inline
+\f1\b0  \cf3 void\cf0  \cf6 __run_timers\cf0 (\cf3 struct\cf0  tvec_base *base)\
+\{\
+	\cf3 struct\cf0  timer_list *timer;\
+\
+	\cf6 spin_lock_irq\cf0 (&base->lock);\
+	
+\f2\b if
+\f1\b0  (\cf6 catchup_timer_jiffies\cf0 (base)) \{\
+		\cf6 spin_unlock_irq\cf0 (&base->lock);\
+		
+\f2\b return
+\f1\b0 ;\
+	\}\
+	
+\f2\b while
+\f1\b0  (\cf6 time_after_eq\cf0 (jiffies, base->timer_jiffies)) \{\
+		\cf3 struct\cf0  list_head work_list;\
+		
+\f0\i \cf2 /* head points to the expired timer list */
+\f1\i0 \cf0 \
+		\cf3 struct\cf0  list_head *head = &work_list;\
+		\cf3 int\cf0  index = base->timer_jiffies & TVR_MASK;\
+\
+		
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+\pard\pardeftab720
+
+\f0\i \cf2 		 * Cascade timers:
+\f1\i0 \cf0 \
+
+\f0\i \cf2 		 */
+\f1\i0 \cf0 \
+		
+\f2\b if
+\f1\b0  (!index &&\
+			(!\cf6 cascade\cf0 (base, &base->tv2, \cf6 INDEX\cf0 (\cf8 0\cf0 ))) &&\
+				(!\cf6 cascade\cf0 (base, &base->tv3, \cf6 INDEX\cf0 (\cf8 1\cf0 ))) &&\
+					!\cf6 cascade\cf0 (base, &base->tv4, \cf6 INDEX\cf0 (\cf8 2\cf0 )))\
+			\cf6 cascade\cf0 (base, &base->tv5, \cf6 INDEX\cf0 (\cf8 3\cf0 ));\
+		++base->timer_jiffies;\
+		\cf6 list_replace_init\cf0 (base->tv1.vec + index, head);\
+
+\f0\i \cf2 		/* after find the timer list */
+\f1\i0 \cf0 \
+		
+\f2\b while
+\f1\b0  (!\cf6 list_empty\cf0 (head)) \{\
+			\cf3 void\cf0  (*fn)(\cf3 unsigned long\cf0 );\
+			\cf3 unsigned long\cf0  data;\
+			\cf3 bool\cf0  irqsafe;\
+\
+			timer = \cf6 list_first_entry\cf0 (head, \cf3 struct\cf0  timer_list,entry);\
+			fn = timer->function;\
+			data = timer->data;\
+			irqsafe = \cf6 tbase_get_irqsafe\cf0 (timer->base);\
+\
+			\cf6 timer_stats_account_timer\cf0 (timer);\
+\
+			base->running_timer = timer;\
+			\cf6 detach_expired_timer\cf0 (timer, base);\
+\
+			
+\f2\b if
+\f1\b0  (irqsafe) \{\
+				\cf6 spin_unlock\cf0 (&base->lock);\
+				\cf6 call_timer_fn\cf0 (timer, fn, data);\
+				\cf6 spin_lock\cf0 (&base->lock);\
+			\} 
+\f2\b else
+\f1\b0  \{\
+				\cf6 spin_unlock_irq\cf0 (&base->lock);\
+				\cf6 call_timer_fn\cf0 (timer, fn, data);\
+				\cf6 spin_lock_irq\cf0 (&base->lock);\
+			\}\
+		\}\
+	\}\
+	base->running_timer = NULL;\
+	\cf6 spin_unlock_irq\cf0 (&base->lock);\
+\}\
+\
+\
+\pard\pardeftab720
+\cf3 void\cf0  __init \cf6 init_timers\cf0 (\cf3 void\cf0 )\
+\{\
+	\cf3 int\cf0  err;\
+\
+	
+\f0\i \cf2 /* ensure there are enough low bits for flags in timer->base pointer */
+\f1\i0 \cf0 \
+	\cf6 BUILD_BUG_ON\cf0 (\cf6 __alignof__\cf0 (\cf3 struct\cf0  tvec_base) & TIMER_FLAG_MASK);\
+\
+	err = \cf6 timer_cpu_notify\cf0 (&timers_nb, (\cf3 unsigned long\cf0 )CPU_UP_PREPARE,\
+			       (\cf3 void\cf0  *)(\cf3 long\cf0 )\cf6 smp_processor_id\cf0 ());\
+	\cf6 BUG_ON\cf0 (err != NOTIFY_OK);\
+\
+	\cf6 init_timer_stats\cf0 ();\
+	\cf6 register_cpu_notifier\cf0 (&timers_nb);\
+	\cf6 open_softirq\cf0 (TIMER_SOFTIRQ, run_timer_softirq);\
+\}\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * This function runs timers and the timer-tq in bottom half context.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 static void\cf0  \cf6 run_timer_softirq\cf0 (\cf3 struct\cf0  softirq_action *h)\
+\{\
+	\cf3 struct\cf0  tvec_base *base = \cf6 __this_cpu_read\cf0 (tvec_bases);\
+\
+	\cf6 hrtimer_run_pending\cf0 ();\
+\
+	
+\f2\b if
+\f1\b0  (\cf6 time_after_eq\cf0 (jiffies, base->timer_jiffies))\
+		\cf6 __run_timers\cf0 (base);\
+\}\
+\
+\pard\pardeftab720
+
+\f0\i \cf2 /*
+\f1\i0 \cf0 \
+
+\f0\i \cf2  * Called by the local, per-CPU timer interrupt on SMP.
+\f1\i0 \cf0 \
+
+\f0\i \cf2  */
+\f1\i0 \cf0 \
+\pard\pardeftab720
+\cf3 void\cf0  \cf6 run_local_timers\cf0 (\cf3 void\cf0 )\
+\{\
+	\cf6 hrtimer_run_queues\cf0 ();\
+	\cf6 raise_softirq\cf0 (TIMER_SOFTIRQ);\
+\}\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}

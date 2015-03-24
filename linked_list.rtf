@@ -1,0 +1,124 @@
+{\rtf1\ansi\uc0 \deff1{\fonttbl{\f1\fmodern\fprq1\fcharset0 Courier New;}}{\colortbl;\red224\green234\blue238;\red00\green00\blue00;\red191\green03\blue03;\red176\green126\blue00;\red131\green129\blue131;\red131\green129\blue131;\red255\green00\blue255;\red00\green130\blue00;\red129\green129\blue00;\red85\green85\blue85;\red00\green00\blue00;\red00\green87\blue174;\red00\green00\blue00;\red00\green87\blue174;\red00\green00\blue00;\red01\green01\blue129;}
+\paperw11905\paperh16837\margl1134\margr1134\margt1134\margb1134\sectd\plain\f1\fs50
+\pard \cbpat1{{\cf2{}}{\cf14{struct}} {\cf2{node_t}}}\par\pard
+\cbpat1{{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{void}} {\cf2{}}{\cf11{*}}{\cf2{item}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{struct}} {\cf2{node}}{\cf11{*}} {\cf2{prev}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{struct}} {\cf2{node}}{\cf11{*}} {\cf2{next}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\};}}}\par\pard
+\cbpat1{{\cf2{}}{\cf15{\b typedef\b0 }} {\cf2{}}{\cf14{struct}} {\cf2{node_t}}{\cf11{*}} {\cf2{node_ptr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf15{\b typedef\b0 }} {\cf2{}}{\cf14{struct}} {\cf2{data_t}}{\cf11{*}} {\cf2{data_ptr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{node_ptr head}} {\cf11{= (}}{\cf2{node_ptr}}{\cf11{)}}{\cf2{}}{\cf16{malloc}}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf13{\b sizeof\b0 }}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{struct}} {\cf2{node_t}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{node_ptr curr}} {\cf11{=}} {\cf2{head}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf13{\b for\b0 }} {\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{int}} {\cf2{i}} {\cf11{=}} {\cf2{}}{\cf4{{0}}}{\cf2{}}{\cf11{;}} {\cf2{i}} {\cf11{<}} {\cf2{count}}{\cf11{; ++}}{\cf2{i}}{\cf11{)}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{	pdata data}} {\cf11{= (}}{\cf2{data_ptr}}{\cf11{)}}{\cf2{}}{\cf16{malloc}}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf13{\b sizeof\b0 }}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{struct}} {\cf2{data_t}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf13{\b if\b0 }} {\cf2{}}{\cf11{(!}}{\cf2{data}}{\cf11{) \{}}{\cf2{}}{\cf6{\i /* memory error */\i0 }}{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{	curr}}{\cf11{->}}{\cf2{next}} {\cf11{= (}}{\cf2{node_ptr}}{\cf11{)}}{\cf2{}}{\cf16{malloc}}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf13{\b sizeof\b0 }}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{struct}} {\cf2{node_t}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf13{\b if\b0 }} {\cf2{}}{\cf11{(!}}{\cf2{curr}}{\cf11{->}}{\cf2{next}}{\cf11{) \{}}{\cf2{}}{\cf6{\i /* memory error */\i0 }}{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{	curr}}{\cf11{->}}{\cf2{next}}{\cf11{->}}{\cf2{item}} {\cf11{=}} {\cf2{pdata}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{	curr}}{\cf11{->}}{\cf2{next}}{\cf11{->}}{\cf2{prev}} {\cf11{=}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{	curr}} {\cf11{=}} {\cf2{curr}}{\cf11{->}}{\cf2{next}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{curr}}{\cf11{->}}{\cf2{next}} {\cf11{=}} {\cf2{head}}{\cf11{;}} {\cf2{}}{\cf5{\i // make it a circular list\i0 }}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{{\cf5{\i // include/types.h\i0 }}}\par\pard
+\cbpat1{{\cf2{}}{\cf14{struct}} {\cf2{list_head}} {\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{struct}} {\cf2{list_head}} {\cf11{*}}{\cf2{next}}{\cf11{, *}}{\cf2{prev}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\};}}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{{\cf14{struct}} {\cf2{kernel_list}}}\par\pard
+\cbpat1{{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf11{......}} {\cf2{}}{\cf5{\i // as many data fields as you want\i0 }}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{struct}} {\cf2{list_head entry}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf11{......}} {\cf2{}}{\cf5{\i // as many data fields as you want\i0 }}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* as many lists as you want */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{	{\cf14{struct}} {\cf2{list_head another_entry}}}\par\pard
+\cbpat1{	{\cf11{......}} {\cf2{}}{\cf5{\i // as many data fields as you want\i0 }}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\};}}}\par\pard
+\cbpat1{{\cf2{}}{\cf15{\b typedef\b0 }} {\cf2{}}{\cf14{struct}} {\cf2{kernel_list klist}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{klist head}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf16{INIT_LIST_HEAD}}{\cf2{}}{\cf11{(&(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}{\cf5{\i // LIST_HEAD(head);\i0 }}}\par\pard
+\cbpat1{{\cf2{klist}}{\cf11{*}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf13{\b for\b0 }} {\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{int}} {\cf2{i}} {\cf11{=}} {\cf2{}}{\cf4{{0}}}{\cf2{}}{\cf11{;}} {\cf2{i}} {\cf11{<}} {\cf2{count}}{\cf11{; ++}}{\cf2{i}}{\cf11{)}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\{}}	}\par\pard
+\cbpat1{{\cf2{	curr}} {\cf11{= (}}{\cf2{klist}} {\cf11{*)}}{\cf2{}}{\cf16{malloc}}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf13{\b sizeof\b0 }}{\cf2{}}{\cf11{(}}{\cf2{klist}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* init data values in curr */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{	{\cf11{......}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* stack style insertion */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{	{\cf16{list_add}}{\cf2{}}{\cf11{(&(}}{\cf2{curr}}{\cf11{->}}{\cf2{entry}}{\cf11{), &(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* queue style insertion */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{	{\cf16{list_add_tail}}{\cf2{}}{\cf11{(&(}}{\cf2{curr}}{\cf11{->}}{\cf2{entry}}{\cf11{), &(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{}\par\pard
+\cbpat1{list_head}}{\cf11{*}} {\cf2{pos}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{klist}}{\cf11{*}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf6{\i /* iterate over a list */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf16{list_for_each}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{, &(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{))}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{	curr}} {\cf11{=}} {\cf2{}}{\cf16{list_entry}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{,}} {\cf2{}}{\cf14{struct}} {\cf2{kernel_list}}{\cf11{,}} {\cf2{entry}}{\cf11{);}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* read operations on curr */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{	{\cf11{......}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{}\par\pard
+\cbpat1{klist}}{\cf11{*}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf6{\i /* iterate over a list */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf16{list_for_each_entry}}{\cf2{}}{\cf11{(}}{\cf2{curr}}{\cf11{, &(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{),}} {\cf2{entry}}{\cf11{)}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf6{\i /* read operations on curr directly*/\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{}\par\pard
+\cbpat1{list_head}}{\cf11{*}} {\cf2{pos}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{list_head}}{\cf11{*}} {\cf2{tmp}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf14{struct}} {\cf2{kernel_list}}{\cf11{*}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{}}{\cf6{\i /* iterate safe against removal of item */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf16{list_for_each_safe}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{,}} {\cf2{tmp}}{\cf11{, &(}}{\cf2{head}}{\cf11{.}}{\cf2{entry}}{\cf11{))}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\{}}}\par\pard
+\cbpat1{{\cf2{	curr}} {\cf11{=}} {\cf2{}}{\cf16{list_entry}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{,}} {\cf2{}}{\cf14{struct}} {\cf2{kernel_list}}{\cf11{,}} {\cf2{entry}}{\cf11{);}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf16{list_del}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{);}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf16{free}}{\cf2{}}{\cf11{(}}{\cf2{curr}}{\cf11{)}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\}}}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{{\cf6{\i /**\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * list_entry - get the struct for this entry\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @ptr:	the &struct list_head pointer.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @type:	the type of the struct this is embedded in.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @member:	the name of the list_struct within the struct.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf8{#define list_entry(ptr, type, member) container_of(ptr, type, member)}}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{{\cf5{\i // include/linux/kernel.h\i0 }}}\par\pard
+\cbpat1{{\cf2{}}{\cf6{\i /**\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * container_of - cast a member of a structure out to the containing structure\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @ptr:	the pointer to the member.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @type:	the type of the container struct this is embedded in.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  * @member:	the name of the member within the struct.\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  *\i0 }}}\par\pard
+\cbpat1{{\cf6{\i  */\i0 }}{\cf2{}}}\par\pard
+\cbpat1{{\cf8{#define container_of(ptr, type, member) (\{			\\}}}\par\pard
+\cbpat1{{\cf8{	const typeof( ((type *){0})->member ) *__mptr = (ptr);	\\}}}\par\pard
+\cbpat1{{\cf8{	(type *)( (char *)__mptr - offsetof(type,member) );\})}}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{{\cf8{#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *){0})->MEMBER)}}}\par\pard
+\cbpat1{{\cf2{}\par\pard
+\cbpat1{list_head}}{\cf11{*}} {\cf2{pos}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{list_head}}{\cf11{*}} {\cf2{tmp}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{klist}}{\cf11{*}} {\cf2{curr}}{\cf11{;}}}\par\pard
+\cbpat1{{\cf2{curr}} {\cf11{=}} {\cf2{}}{\cf16{list_entry}}{\cf2{}}{\cf11{(}}{\cf2{pos}}{\cf11{,}} {\cf2{klist}}{\cf11{,}} {\cf2{entry}}{\cf11{) =>}}}\par\pard
+\cbpat1{{\cf2{curr}} {\cf11{= (\{}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf14{const}} {\cf2{}}{\cf13{\b typeof\b0 }}{\cf2{}}{\cf11{(((}}{\cf2{}}{\cf14{struct}} {\cf2{kernel_list}} {\cf11{*)}}{\cf2{}}{\cf4{{0}}}{\cf2{}}{\cf11{)->}}{\cf2{entry}}{\cf11{)}} }\par\pard
+\cbpat1{{\cf2{}}										{\cf11{*}}{\cf2{__mptr}} {\cf11{= (}}{\cf2{pos}}{\cf11{);}}}\par\pard
+\cbpat1{{\cf2{}}	{\cf11{(}}{\cf2{type}} {\cf11{*)((}}{\cf2{}}{\cf14{char}} {\cf2{}}{\cf11{*)}}{\cf2{__mptr}} {\cf11{-}} }\par\pard
+\cbpat1{{\cf2{}}		{\cf16{offsetof}}{\cf2{}}{\cf11{(}}{\cf2{}}{\cf14{struct}} {\cf2{kernel_list}} {\cf11{*,}} {\cf2{entry}}{\cf11{));}}}\par\pard
+\cbpat1{{\cf2{}}{\cf11{\})}}}\par\pard
+\cbpat1{{\cf2{}}}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}\par\pard
+\cbpat1{}}
